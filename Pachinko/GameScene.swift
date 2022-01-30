@@ -7,7 +7,7 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         let background = SKSpriteNode(imageNamed: "background.jpg")
@@ -17,6 +17,7 @@ class GameScene: SKScene {
         addChild(background)
         
         physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+        physicsWorld.contactDelegate = self
         
         makeBouncer(at: CGPoint(x: 0, y: 0))
         makeBouncer(at: CGPoint(x: 256, y: 0))
@@ -79,12 +80,21 @@ class GameScene: SKScene {
         ball.removeFromParent()
     }
     
+    func didBegin(_ contact: SKPhysicsContact) {
+        if contact.bodyA.node?.name == "ball" {
+            collisionBetween(ball: contact.bodyA.node!, object: contact.bodyB.node!)
+        } else if contact.bodyB.node?.name == "ball" {
+            collisionBetween(ball: contact.bodyB.node!, object: contact.bodyA.node!)
+        }
+    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             let location = touch.location(in: self)
             
             let ball = SKSpriteNode(imageNamed: "ballRed")
             ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.size.width / 2.0)
+            ball.physicsBody!.contactTestBitMask = ball.physicsBody!.collisionBitMask
             ball.physicsBody?.restitution = 0.4
             ball.position = location
             ball.name = "ball"
